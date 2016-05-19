@@ -1,0 +1,27 @@
+a:link {color:#00a4ac; text-decoration: none; font-weight:bold;}
+a:visited {color:#00a4ac; text-decoration: none; font-weight:bold;}
+a:hover, a:focus {color:#FFFFFF; text-decoration: none; font-weight:bold; text-decoration: none; background-color: #00a4ac;}
+
+td, table, body, tr, p {font-family: arial; font-size: 13px; color: #5a5a5a; line-height: 17px; text-align: justify;}
+
+b, strong {color: #3b0707;}
+i, em {color: #232323;}
+u {color: #ead100;}
+
+textarea, input, select {background-color: transparent; font-size:13px; text-align:left; font-family: arial; border:1px dotted #636363; color: #636363; padding:3px; margin:3px;}
+select:focus, input:focus, textarea:focus {border:1px dotted #e13cb8; color: #636363;}
+
+
+h1 {color: #186568; font-family: Maiandra GD, calibri; font-size: 20px; font-weight: normal; text-align: left; border-bottom: 1px dashed #7c7c7c; padding-left:15px; padding-top:24px;}
+
+h2 {color: #186568; font-family: Maiandra GD, calibri; font-size: 16px; font-weight: normal; text-align: left; padding-left:15px; padding-top:24px;}
+
+::-moz-selection {color: #313131; background: #ffe3cd;}
+
+img {border: 0px;}
+
+a:visited.menu, a.menu {border-bottom: 1px dashed #FFFFFF; display: block; line-height: 18px; padding: 3px 0 3px 0px; margin: 0; background-color: #520505; color: #FFFFFF; text-decoration: none; font-family: Maiandra GD, arial; font-size: 15px; text-align: center; font-weight:normal;}
+a:hover.menu {border-bottom: 1px dashed #FFFFFF; color: #FFFFFF; background-color: #00A4AC; font-family: Maiandra GD, arial; font-size: 15px;}
+
+.fejlec {color: #e8a900; font-family: calibri; font-size: 40px; font-weight: normal; text-align: center; line-height: 52px;}
+

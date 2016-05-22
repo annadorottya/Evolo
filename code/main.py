@@ -50,7 +50,7 @@ def attack(parrotsAP):
 	else:
 		print "No communication toward parrot at ", parrotsAP.ssid, ", exiting"
 	#if attack finished, clean up the global variables
-	underattack = [] #TODO global variables are not working as expectedin multithreading
+	underattack = [] #TODO global variables are not working as expected in multithreading
 	attackInProgress = 0
 	disconnectFromWifi(interface)
 	print "Attack finished"

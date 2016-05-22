@@ -3,29 +3,11 @@ from wifi import Cell, Scheme
 from time import sleep
 import re
 
-def readConfig(): #TODO implement it
+def readConfig(): #TODO implement it - it reads the config file and returns the whitelist of drones (string array of MAC addresses) and other config data (not used yet)
 	return ("", "")
 
-def readKnobState(): #TODO implement it
+def readKnobState(): #TODO implement it - it reads the state of the knob from the analog gpio pin of the Raspberry Pi and returns the corresponding mode in string
 	return "Aggressive"
-
-#def scanAndConnectToParrot(interface, whitelist): #TODO change to separate scan & connect
-#	parrotNotFound = True
-#	while parrotNotFound:
-#		aps = Cell.all(interface)
-#		print aps
-#		for ap in aps:
-#			if ap.address.startswith('90:03:B7') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
-#				print "Parrot Wifi found"
-#				print ap
-#				parrotNotFound = False
-#				scheme = Scheme.for_cell(interface, 'abcde', ap)
-#				scheme.delete() #otherwise "This scheme already exists" error
-#				scheme.save()
-#				scheme.activate() #connect to the Parrot's wifi
-#				print "Connected to Parrot Wifi"
-#				break
-#		sleep(1)
 
 def scanForParrots(interface, whitelist, underattack):
 	aps = Cell.all(interface)

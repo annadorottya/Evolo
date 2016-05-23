@@ -4,7 +4,6 @@ from time import sleep
 import re
 from multiprocessing import Process, Value
 
-
 from evolo import *
 
 #global constants

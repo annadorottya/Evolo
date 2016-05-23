@@ -1,0 +1,11 @@
+pi@raspberrypi:~/evolo $ python /home/pi/evolo/listDrones.py 
+WARNING: Failed to execute tcpdump. Check it is installed and in the PATH
+WARNING: No route found for IPv6 destination :: (no default route?)
+New parrot wifi found: dtone
+dtone 58:44:98:13:80:6C
+New parrot wifi found: ardrone123456
+ardrone123456 90:03:B7:AA:BB:CC
+
+----------------------
+Warnings and log messages can be different
+You need to parse only the lines with ssid[space]mac (use regex for the mac)

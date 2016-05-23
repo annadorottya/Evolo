@@ -84,6 +84,7 @@ if __name__ == '__main__':
 	while True: #scan, attack, repeat
 		global underattack, attackInProgress
 		mode = readKnobState()
+		print "mode: ", mode
 		whitelist, config = readConfig()
 		print underattack
 		newParrots = scanForParrots(interface, whitelist, underattack)

@@ -1,13 +1,40 @@
 from scapy.all import *
 from wifi import Cell, Scheme
 from time import sleep
+import serial
 import re
 
 def readConfig(): #TODO implement it - it reads the config file and returns the whitelist of drones (string array of MAC addresses) and other config data (not used yet)
 	return ("", "")
 
-def readKnobState(): #TODO implement it - it reads the state of the knob from the analog gpio pin of the Raspberry Pi and returns the corresponding mode in string
-	return "Aggressive"
+def readKnobState():
+	serialDev = "/dev/ttyACM0"
+	i = 0
+	while (not os.path.exists(serialDev)) and i < 10:
+		serialDev = "/dev/ttyACM" + str(i)
+		i += 1
+	if not os.path.exists(serialDev):
+		print "ERROR - could not find Arduino connected. Going to 'Moderate' mode"
+		return "Moderate"
+	ser = serial.Serial(serialDev, 9600)
+	ser.flushInput() #get the newest data
+	sleep(0.2) #wait for the data
+	state = 0
+	for i in range(1,10): #take the average of 10 readings
+		stateStr = ""
+		while (not stateStr.isdigit()) or int(stateStr) > 1023:
+			stateStr=ser.readline().rstrip()
+			print stateStr
+			sleep(0.2)
+		state += int(stateStr)
+	state = state/10
+	#state is between 0 and 1023
+	if state < 340:
+		return "Aggressive"
+	if state < 680:
+		return "Moderate"
+	else:
+		return "Gracious"
 
 def scanForParrots(interface, whitelist, underattack):
 	aps = Cell.all(interface)

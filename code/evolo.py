@@ -1,3 +1,5 @@
+import logging
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR) #suppress the 'WARNING: No route found for IPv6 destination'
 from scapy.all import *
 from wifi import Cell, Scheme
 from time import sleep
@@ -24,7 +26,7 @@ def readKnobState():
 		stateStr = ""
 		while (not stateStr.isdigit()) or int(stateStr) > 1023:
 			stateStr=ser.readline().rstrip()
-			print stateStr
+			#print stateStr
 			sleep(0.2)
 		state += int(stateStr)
 	state = state/10
@@ -93,7 +95,7 @@ def pkt_callback(pkt):
 		m = p.search(pkt[Raw].load)
 		seqNr = int(m.group(1))
 
-def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, count): #TODO implement warn
+def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, count): #TODO test warn
 	part1 = ""
 	part2 = ""
 	if command == "land":
@@ -102,6 +104,9 @@ def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, se
 	elif command == "stop":
 		part1 = "PCMD_MAG"
 		part2 = "0,0,0,0,0,0,0"
+	elif command == "warn": #slowly rotate
+		part1 = "PCMD_MAG"
+		part2 = "1,0,0,0,0,0,0.1" #last value is the angular speed [-1,1]
 	elif command == "release":
 		part1 = "PCMD_MAG"
 		part2 = "0,0,0,0,0,0,0"

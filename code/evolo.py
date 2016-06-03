@@ -8,7 +8,20 @@ import re
 import os
 
 def readConfig(): #TODO implement it - it reads the config file and returns the whitelist of drones (string array of MAC addresses) and other config data (not used yet)
-	return ("", "")
+	return (readWhitelist(), readRange())
+
+def readWhitelist():
+	with open("/home/pi/Evolo/code/whitelist.txt", "r") as ins:
+		whitelist = []
+		for line in ins: #ardrone12345678;58:44:98:13:80:6C;03/06/2016
+			elements = line.split(";")
+			whitelist.append(elements[1]) #second element is the MAC
+	return whitelist
+
+def readRange():
+	with open("/home/pi/Evolo/code/range.txt", "r") as ins:
+		for line in ins:
+			return int(line)
 
 def readKnobState():
 	serialDev = "/dev/ttyACM0"

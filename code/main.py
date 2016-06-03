@@ -100,15 +100,15 @@ if __name__ == '__main__':
 	disconnectFromWifi(interfaceToConnect)
 	sleep(5)
 	print "Evolo is ready for operation"
-	global mode, config, underattack, attackInProgress, attackT
+	global mode, Range, underattack, attackInProgress, attackT
 	underattack = []
 	attackInProgress = 0 #0 - no attack, 1 - normal attack, 2 - panic mode
 	mode = ""
-	config = ""
+	Range = ""
 	while True: #scan, attack, repeat
 		mode = readKnobState()
 		print "mode: ", mode
-		whitelist, config = readConfig()
+		whitelist, Range = readConfig()
 		newParrots = scanForParrots(interfaceForScan, whitelist, underattack)
 		if len(newParrots) > 0: #only work if there are new drones nearby
 			if attackInProgress == 0 and len(newParrots) == 1: #no attack in progress, only one parrot found

@@ -18,7 +18,7 @@ function addToWhitelistByMac() {
 
 function addToWhitelist(drone) {
 	$.get("addToWhitelist.php?drone=" + drone);
-	setTimeout(function() {window.location = window.location;}, 1000);
+	setTimeout(function() {window.location = window.location;}, 2000);
 }
 </script>
 
@@ -58,9 +58,9 @@ function addToWhitelist(drone) {
                 	</tr>
         		</tbody>
         	</table>
-		</div>-->
-
 		</div>
+
+		</div>-->
 
 			<p>Or if you have the MAC address, you can type it here:</p>
 <div class="form-group">

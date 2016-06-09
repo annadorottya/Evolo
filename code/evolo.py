@@ -23,7 +23,9 @@ def readRange():
 		for line in ins:
 			return int(line)
 
-def readKnobState():
+ser = None
+def startArduino():
+	global ser
 	serialDev = "/dev/ttyACM0"
 	i = 0
 	while (not os.path.exists(serialDev)) and i < 10:
@@ -31,23 +33,29 @@ def readKnobState():
 		i += 1
 	if not os.path.exists(serialDev):
 		print "ERROR - could not find Arduino connected. Going to 'Moderate' mode"
-		return "Moderate"
-	ser = serial.Serial(serialDev, 9600)
-	ser.flushInput() #get the newest data
-	sleep(0.2) #wait for the data
-	state = 0
-	for i in range(1,10): #take the average of 10 readings
-		stateStr = ""
-		while (not stateStr.isdigit()) or int(stateStr) > 1023:
-			stateStr=ser.readline().rstrip()
-			#print stateStr
-			sleep(0.2)
-		state += int(stateStr)
-	state = state/10
-	#state is between 0 and 1023
-	if state < 340:
+		ser = None
+	else:
+		ser = serial.Serial(serialDev, 9600)
+
+def arduinoLCD(message):
+	global ser
+	if ser != None: #if Arduino is connected
+		ser.write(message[:16]) #only write the first 16 characters, since that's the size of the LCD
+
+def readKnobState():
+	global ser
+	if ser == None:
+		return "Moderate" #Arduino not found
+	ser.flushInput() #flush serial to get the newest data
+	sleep(2) #wait for the data
+	modeStr = ""
+	while (not modeStr.isdigit()) or int(modeStr) > 3:
+		modeStr=ser.readline().rstrip()
+		sleep(0.1)
+	mode = int(modeStr)
+	if mode == 1:
 		return "Aggressive"
-	if state < 680:
+	if mode == 2:
 		return "Moderate"
 	else:
 		return "Gracious"
@@ -59,6 +67,7 @@ def scanForParrots(interface, whitelist, underattack):
 		if ap.address.startswith('90:03:B7') or ap.address.startswith('00:26:7E') or ap.address.startswith('A0:14:3D') or ap.address.startswith('00:12:1C') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
 			if ap.address not in whitelist and ap.address not in underattack: #only add if new and not on the whitelist
 				print "New parrot wifi found:", ap.ssid
+				arduinoLCD("New drone: " + ap.ssid)
 				parrots.append(ap)
 	return parrots
 
@@ -111,7 +120,7 @@ def sniffParrotCommunication(interface):
 
 def pkt_callback(pkt):
 	global srcMAC, dstMAC, srcIP, dstIP, seqNr
-	#pkt.show() # debug
+	pkt.show() # debug
 	if Raw in pkt and 'AT*' in pkt[Raw].load and srcMAC == "":
 		srcMAC= pkt[Ether].src
 		dstMAC= pkt[Ether].dst

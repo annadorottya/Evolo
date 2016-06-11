@@ -77,7 +77,6 @@ def connectTo(ap, interface):
 		scheme.delete() #otherwise "This scheme already exists" error
 		scheme.save()
 		scheme.activate() #connect to the Parrot's wifi
-		return True
 	except Exception as detail:
 		print "Error while trying to connect to wifi in function connectTo - ", detail
 		return False
@@ -88,18 +87,21 @@ def connectTo(ap, interface):
 	srcIP = ""
 	dstIP = ""
 	seqNr = ""
+	return True
 
 def getWifiDistance(interface, ap):
-	aps = Cell.all(interface) #aps first element is always the one we are connected to right now
-	if(aps[0].address != ap.address): #if we are no longer connected to the given wifi, exit
-		return 0
-	return -1* aps[0].signal #originally a negative number, closer to 0 - closer the AP
+	aps = Cell.all(interface)
+	for apA in aps:
+		if(apA.address == ap.address):
+			return -1* apA.signal #originally a negative number, closer to 0 - closer the AP
+	return 0 #if no longer here, exit
 
 def disconnectFromWifi(interface):
 	#apparently python's wifi module can not disconnect from a network, so we have to do it with os commands
 	os.system("ifconfig " + interface + " down")
 	sleep(0.5)
 	os.system("ifconfig " + interface + " up")
+	sleep(0.5)
 	return True
 
 def getAPsMAC(aps):
@@ -114,13 +116,13 @@ srcIP = ""
 dstIP = ""
 seqNr = ""
 def sniffParrotCommunication(interface):
-	sniff(iface=interface, prn=pkt_callback, filter="udp and port 5556", timeout = 3) #count = 10, 
+	sniff(iface=interface, prn=pkt_callback, filter="udp and port 5556", timeout = 3, count = 10)
 	global srcMAC, dstMAC, srcIP, dstIP, seqNr
 	return (srcMAC, dstMAC, srcIP, dstIP, seqNr)
 
 def pkt_callback(pkt):
 	global srcMAC, dstMAC, srcIP, dstIP, seqNr
-	pkt.show() # debug
+	#pkt.show() # debug
 	if Raw in pkt and 'AT*' in pkt[Raw].load and srcMAC == "":
 		srcMAC= pkt[Ether].src
 		dstMAC= pkt[Ether].dst

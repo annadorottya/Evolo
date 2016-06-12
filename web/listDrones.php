@@ -29,7 +29,10 @@
 $output;
 try{
 $drones = "";
-exec("python /home/pi/Evolo/code/listDrones.py",$output,$returnValue);
+exec("sudo python /home/pi/Evolo/code/listDrones.py",$output,$returnValue);
+/*echo "output: ";
+echo print_r($output);
+echo "<br>return value: ".$returnValue;*/
 /*if(!$returnValue) die('<div class="alert alert-danger"><span class="glyphicon glyphicon-remove"></span> Error occurred while listing the drones. If persistent, contact customer service and tell them this error message: <pre>executing listDrones.py failed</pre></div>');*/
 foreach($output as $line){
 	if(startsWith($line,"listDrones")){

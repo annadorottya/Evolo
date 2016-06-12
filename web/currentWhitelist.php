@@ -19,7 +19,7 @@ while(!feof($myfile)) {
                         <td>'.$e[0].'</td>
                      <td>'.$e[2].'</td>
                      <td>
-                       <button type="button" class="btn btn-default btn-sm" title="Delete" onclick="$.get(\'deleteFromWhitelist.php?drone=' . urlencode($line) . '\'); setTimeout(function() {window.location = window.location;}, 2000);">
+                       <button type="button" class="btn btn-default btn-sm" title="Delete" onclick="$.get(\'deleteFromWhitelist.php?drone=' . urlencode($line) . '\'); setTimeout(function() {window.location = window.location;}, 1000);">
                          <span class="glyphicon glyphicon-trash"></span> 
                        </button>
                     </td>

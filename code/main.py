@@ -4,8 +4,8 @@ import threading
 from evolo import *
 
 #global constants
-interfaceForScan = "wlan1"
-interfaceToConnect = "wlan0"
+interfaceForScan = "wlan0"
+interfaceToConnect = "wlan1"
 
 ############################
 #Process for normal attacks#

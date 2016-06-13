@@ -7,4 +7,4 @@ parrots = scanForParrots(interfaceForScan, [], [])
 #parrots = scanForParrots("wlan0", [], [])
 
 for parrot in parrots:
-	print "listDrones;" + parrot.ssid + ";" + parrot.address + ";" + str(parrot.signal)
+	logging.INFO("listDrones;" + parrot.ssid + ";" + parrot.address + ";" + str(parrot.signal))

@@ -24,7 +24,9 @@ void loop() {
   }
   sensorValue /= 5;
   
-  if(sensorValue < 340)
+  if(sensorValue < 100 || sensorValue > 950)
+    mode = 0; //Off
+  else if(sensorValue < 350)
     mode = 1; //Aggressive
   else if(sensorValue < 680)
     mode = 2; //Moderate
@@ -37,11 +39,13 @@ void loop() {
     oldmode = mode;
     lcd.setCursor(0, 0); //set cursor to first row
     lcd.print("Mode: ");
-    if(mode == 1)
+    if(mode == 0)
+      lcd.print("Off       ");
+    else if(mode == 1)
       lcd.print("Aggressive");
-    if(mode == 2)
+    else if(mode == 2)
       lcd.print("Moderate  ");
-    if(mode == 3)
+    else if(mode == 3)
       lcd.print("Gracious  ");
   }
 

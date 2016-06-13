@@ -7,7 +7,7 @@ import serial
 import re
 import os
 
-def readConfig(): #TODO implement it - it reads the config file and returns the whitelist of drones (string array of MAC addresses) and other config data (not used yet)
+def readConfig():
 	return (readWhitelist(), readRange())
 
 def readWhitelist():
@@ -53,6 +53,8 @@ def readKnobState():
 		modeStr=ser.readline().rstrip()
 		sleep(0.1)
 	mode = int(modeStr)
+	if mode == 0:
+		return "Off"
 	if mode == 1:
 		return "Aggressive"
 	if mode == 2:
@@ -141,7 +143,7 @@ def pkt_callback(pkt):
 		m = p.search(pkt[Raw].load)
 		seqNr = int(m.group(1))
 
-def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNr, count): #TODO test warn
+def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, seqNr, count):
 	part1 = ""
 	part2 = ""
 	if command == "land":

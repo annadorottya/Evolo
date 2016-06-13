@@ -126,9 +126,10 @@ if __name__ == '__main__':
 	while True: #scan, attack, repeat
 		mode = readKnobState()
 		print "mode: ", mode
-		whitelist, Range = readConfig()
-		newParrots = scanForParrots(interfaceForScan, whitelist, underattack)
-		if len(newParrots) > 0: #only work if there are new drones nearby
+		if mode != "Off":
+			whitelist, Range = readConfig()
+			newParrots = scanForParrots(interfaceForScan, whitelist, underattack)
+		if mode != "Off" and len(newParrots) > 0: #only work if there are new drones nearby
 			if attackInProgress == 0 and len(newParrots) == 1: #no attack in progress, only one parrot found
 				underattack = getAPsMAC(newParrots)
 				attackInProgress = 1

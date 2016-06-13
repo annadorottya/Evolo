@@ -13,7 +13,7 @@ This code is based on the example code shipped with Arduino IDE. That code is in
 
 // These constants won't change.  They're used to give names
 // to the pins used:
-const int analogInPin = A0;  // Analog input pin that the potentiometer is attached to
+const int analogInPin = A10;  // Analog input pin that the potentiometer is attached to
 int sensorValue = 0;        // value read from the pot
 
 void setup() {

